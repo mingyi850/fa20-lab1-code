@@ -89,22 +89,8 @@ defmodule IntroLab do
   # prefer.
   @retry_timeout 100
 
-  @doc """
-  Send `message` to `destination` over a lossy
-  network. The function should return once
-  the message has been delivered or if timeout
-  seconds have passed. Return the number of retries
-  if the packet was successfully delivered, and :notok
-  if the method timed out. The nonce is a number guaranteed
-  to be unique for the sender, that you might find useful
-  in your efforts.
-  """
-  @spec reliable_send_counter(atom(), any(), number(), number(), number()) ::
-          integer() | :notok
-  defp reliable_send_counter(destination, message, nonce, timeout, counter) do
-    send(destination, message)
-    t = Emulation.timer(@retry_timeout)
-
+  @spec receive_reliable_send(atom(), any(), number(), number(), number()) :: integer() | :notok
+  defp receive_reliable_send(destination, message, nonce, timeout, counter) do
     receive do
       :timer ->
         if timeout - @retry_timeout > 0 do
@@ -119,11 +105,32 @@ defmodule IntroLab do
           :notok
         end
 
-      {_, msg} ->
+      {_, returnNonce} when nonce == returnNonce ->
+        IO.inspect({counter, returnNonce, nonce})
         counter
+
+      {_, _} -> receive_reliable_send(destination, message, nonce, timeout, counter)
     end
   end
 
+  @spec reliable_send_counter(atom(), any(), number(), number(), number()) ::
+          integer() | :notok
+  defp reliable_send_counter(destination, message, nonce, timeout, counter) do
+    send(destination, {message, nonce})
+    t = Emulation.timer(@retry_timeout)
+    receive_reliable_send(destination, message, nonce, timeout, counter)
+  end
+
+  @doc """
+  Send `message` to `destination` over a lossy
+  network. The function should return once
+  the message has been delivered or if timeout
+  seconds have passed. Return the number of retries
+  if the packet was successfully delivered, and :notok
+  if the method timed out. The nonce is a number guaranteed
+  to be unique for the sender, that you might find useful
+  in your efforts.
+  """
   @spec reliable_send(atom(), any(), number(), number()) :: integer() | :notok
   def reliable_send(destination, message, nonce, timeout) do
     reliable_send_counter(destination, message, nonce, timeout, 1)
@@ -137,8 +144,8 @@ defmodule IntroLab do
   @spec reliable_receive() :: {atom(), any()}
   def reliable_receive do
     receive do
-      {sender, msg} ->
-        send(sender, msg)
+      {sender, {msg, nonce}} ->
+        send(sender, nonce)
         {sender, msg}
     end
   end
@@ -225,6 +232,7 @@ defmodule IntroLab do
         m -> measure_reliable_ping(destination, count - 1, [m | previous])
       end
     else
+      IO.inspect(previous)
       Statistics.median(previous)
     end
   end
