@@ -1,9 +1,9 @@
 # IntroLab
 
-Github username: (e.g., apanda)
-NYU NetID: (e.g., ap191)
-NYU N#:
-Name: 
+Github username: mingyi850
+NYU NetID: ml9027
+NYU N#: N18796549
+Name: Mingyi Lim
 
 
 As a part of your handin, modify `apps/lab1/README.md` to report the
@@ -21,6 +21,6 @@ Also report any conclusions you can draw from these observations.
 
 
 # Agreement with Collaboration Policy
-I [REPLACE WITH YOUR NAME] have read the course collaboration policy.
+I Mingyi Lim have read the course collaboration policy.
 
 # Citations

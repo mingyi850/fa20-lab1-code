@@ -51,11 +51,11 @@ defmodule IntroLab do
       {_, @inc} ->
         # TODO: Increment counter. Do not send any messages.
         # Remember to remove this once done.
-        raise "Not implemented"
+        lossfree_counter(current + 1)
 
       {_, @dec} ->
         # TODO: Decrement counter. Do not send any messages.
-        raise "Not implemented"
+        lossfree_counter(current - 1)
 
       {sender, @get} ->
         send(sender, current)
@@ -102,14 +102,36 @@ defmodule IntroLab do
   to be unique for the sender, that you might find useful
   in your efforts.
   """
+  @spec reliable_send_counter(atom(), any(), number(), number(), number()) ::
+          integer() | :notok
+  defp reliable_send_counter(destination, message, nonce, timeout, counter) do
+    send(destination, message)
+    t = Emulation.timer(@retry_timeout)
+
+    receive do
+      :timer ->
+        IO.puts("Timeout observed after #{@retry_timeout} ms")
+
+        if timeout - @retry_timeout > 0 do
+          reliable_send_counter(
+            destination,
+            message,
+            nonce,
+            timeout - @retry_timeout,
+            counter + 1
+          )
+        else
+          :notok
+        end
+
+      {_, msg} ->
+        counter
+    end
+  end
+
   @spec reliable_send(atom(), any(), number(), number()) :: integer() | :notok
   def reliable_send(destination, message, nonce, timeout) do
-    # TODO: Write sender logic here. You probably want
-    # to define a private function similar to what is done
-    # for lossfree_counter above to keep track of the number
-    # of retries.
-    raise "Not implemented"
-    :notok
+    reliable_send_counter(destination, message, nonce, timeout, 1)
   end
 
   @doc """
@@ -121,10 +143,7 @@ defmodule IntroLab do
   def reliable_receive do
     receive do
       {sender, msg} ->
-        # TODO: Implement receiver logic here.
-        # You might find it useful to extend the
-        # `msg` part of the match out.
-        raise "Not implemented"
+        send(sender, msg)
         {sender, msg}
     end
   end
