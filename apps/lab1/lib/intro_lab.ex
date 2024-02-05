@@ -107,8 +107,6 @@ defmodule IntroLab do
 
     receive do
       :timer ->
-        IO.puts("Timeout observed after #{@retry_timeout} ms")
-
         if timeout - @retry_timeout > 0 do
           reliable_send_counter(
             destination,
@@ -275,24 +273,11 @@ defmodule IntroLab do
   defp reliable_kv_server(state, count) do
     case reliable_receive() do
       {sender, {@get, key}} ->
-        # TODO: Send a message `{key, current value(key)}`
-        # to the sender using `reliable_send`.
-        # If the key is not currently present send
-        # `{key, nil}`. You might find
-        # https://hexdocs.pm/elixir/Map.html
-        # useful.
-        # You should use count as the nonce for
-        # reliable_send, and update it each time you
-        # send a message.
-        raise "Not implemented"
+        reliable_send(sender, {key, Map.get(state, key)}, count, @send_timeout)
+        reliable_kv_server(state, count + 1)
 
       {_sender, {@set, key, value}} ->
-        # TODO: Store  value for the given key
-        # in the state. You should not send any
-        # message to the sender. You might find
-        # https://hexdocs.pm/elixir/Map.html
-        # useful.
-        raise "Not implemented"
+        reliable_kv_server(Map.put(state, key, value), count + 1)
     end
   end
 
