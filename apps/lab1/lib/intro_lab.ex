@@ -49,12 +49,9 @@ defmodule IntroLab do
   defp lossfree_counter(current) do
     receive do
       {_, @inc} ->
-        # TODO: Increment counter. Do not send any messages.
-        # Remember to remove this once done.
         lossfree_counter(current + 1)
 
       {_, @dec} ->
-        # TODO: Decrement counter. Do not send any messages.
         lossfree_counter(current - 1)
 
       {sender, @get} ->
