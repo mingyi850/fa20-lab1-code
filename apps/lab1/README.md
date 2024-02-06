@@ -25,5 +25,5 @@ Also report any conclusions you can draw from these observations.
 I Mingyi Lim have read the course collaboration policy.
 
 # Citations
-https://hexdocs.pm/elixir/introduction.html
-https://hexdocs.pm/elixir/Map.html
+* https://hexdocs.pm/elixir/introduction.html
+* https://hexdocs.pm/elixir/Map.html
