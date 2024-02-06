@@ -89,8 +89,8 @@ defmodule IntroLab do
   # prefer.
   @retry_timeout 100
 
-  @spec receive_reliable_send(atom(), any(), number(), number(), number()) :: integer() | :notok
-  defp receive_reliable_send(destination, message, nonce, timeout, counter) do
+  @spec receive_reliable_send(atom(), any(), number(), number(), number(), reference()) :: integer() | :notok
+  defp receive_reliable_send(destination, message, nonce, timeout, counter, timer) do
     receive do
       :timer ->
         if timeout - @retry_timeout > 0 do
@@ -106,10 +106,12 @@ defmodule IntroLab do
         end
 
       {_, returnNonce} when nonce == returnNonce ->
-        IO.inspect({counter, returnNonce, nonce})
+        Emulation.cancel_timer(timer)
         counter
 
-      {_, _} -> receive_reliable_send(destination, message, nonce, timeout, counter)
+      _other ->
+        #discard message
+        receive_reliable_send(destination, message, nonce, timeout, counter, timer)
     end
   end
 
@@ -118,7 +120,7 @@ defmodule IntroLab do
   defp reliable_send_counter(destination, message, nonce, timeout, counter) do
     send(destination, {message, nonce})
     t = Emulation.timer(@retry_timeout)
-    receive_reliable_send(destination, message, nonce, timeout, counter)
+    receive_reliable_send(destination, message, nonce, timeout, counter, t)
   end
 
   @doc """
@@ -232,7 +234,6 @@ defmodule IntroLab do
         m -> measure_reliable_ping(destination, count - 1, [m | previous])
       end
     else
-      IO.inspect(previous)
       Statistics.median(previous)
     end
   end
